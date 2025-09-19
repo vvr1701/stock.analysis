@@ -42,7 +42,7 @@ async function fetchStockData(ticker: string): Promise<Omit<StockData, 'id' | 'l
       dailyChangePercent: quote.regularMarketChangePercent || 0,
       movingAverage50: quote.fiftyDayAverage || null,
       sector: sector,
-      intradayData: [], // Would be populated with historical data if needed
+      intradayData: [] as any, // Would be populated with historical data if needed
     };
     
   } catch (error) {
@@ -59,7 +59,7 @@ async function fetchStockData(ticker: string): Promise<Omit<StockData, 'id' | 'l
         dailyChangePercent: Math.random() * 4 - 2,
         movingAverage50: Math.random() * 1000 + 100,
         sector: "Technology",
-        intradayData: [],
+        intradayData: [] as any,
       };
     }
     
