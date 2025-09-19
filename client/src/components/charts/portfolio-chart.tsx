@@ -8,12 +8,16 @@ interface PortfolioChartProps {
   isLoading?: boolean;
 }
 
+// Vibrant, distinct color palette that complements the deep blue theme
 const COLORS = [
-  'hsl(var(--primary))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
+  '#3B82F6', // Bright Blue (primary complement)
+  '#10B981', // Emerald Green  
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+  '#06B6D4', // Cyan
+  '#F97316', // Orange
+  '#84CC16', // Lime
 ];
 
 export function PortfolioChart({ portfolio, stockData, isLoading }: PortfolioChartProps) {
@@ -91,51 +95,93 @@ export function PortfolioChart({ portfolio, stockData, isLoading }: PortfolioCha
   };
 
   return (
-    <Card data-testid="portfolio-chart">
+    <Card data-testid="portfolio-chart" className="relative overflow-hidden">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">Portfolio Distribution</CardTitle>
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+          Portfolio Distribution
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-64">
+        <div className="h-72 relative">
+          {/* Subtle gradient background for depth */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 rounded-lg"></div>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={dataWithPercentages}
                 cx="50%"
                 cy="50%"
-                outerRadius={80}
+                innerRadius={45}
+                outerRadius={95}
                 dataKey="value"
-                stroke="hsl(var(--border))"
-                strokeWidth={2}
+                stroke="rgba(255,255,255,0.8)"
+                strokeWidth={3}
+                style={{
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+                }}
               >
                 {dataWithPercentages.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
-                    fill={COLORS[index % COLORS.length]} 
+                    fill={COLORS[index % COLORS.length]}
+                    style={{
+                      filter: `brightness(1.1) saturate(1.2)`,
+                    }}
                   />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
+          
+          {/* Center label showing total value */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center bg-card/80 backdrop-blur-sm rounded-full px-4 py-2 border border-border/50">
+              <div className="text-xs text-muted-foreground">Total Value</div>
+              <div className="font-bold text-sm text-foreground">
+                ₹{totalValue.toLocaleString('en-IN')}
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-2 mt-4">
-          {dataWithPercentages.map((item, index) => (
-            <div 
-              key={item.ticker} 
-              className="flex items-center space-x-2"
-              data-testid={`legend-item-${item.ticker}`}
-            >
+        {/* Enhanced legend with better styling and readability */}
+        <div className="mt-6 space-y-3">
+          <div className="text-sm font-medium text-foreground mb-3">Holdings Breakdown</div>
+          <div className="grid grid-cols-1 gap-3">
+            {dataWithPercentages.map((item, index) => (
               <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-              ></div>
-              <span className="text-xs text-muted-foreground">
-                {item.ticker} {item.percentage.toFixed(0)}%
-              </span>
-            </div>
-          ))}
+                key={item.ticker} 
+                className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-muted/30 to-transparent border border-border/30 hover:bg-muted/50 transition-colors"
+                data-testid={`legend-item-${item.ticker}`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div 
+                    className="w-4 h-4 rounded-full border-2 border-white/50 shadow-lg" 
+                    style={{ 
+                      backgroundColor: COLORS[index % COLORS.length],
+                      boxShadow: `0 2px 8px ${COLORS[index % COLORS.length]}30`
+                    }}
+                  ></div>
+                  <div>
+                    <div className="font-medium text-sm text-foreground">{item.ticker}</div>
+                    <div className="text-xs text-muted-foreground">
+                      ₹{item.value.toLocaleString('en-IN')}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-sm text-foreground">
+                    {item.percentage.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    of portfolio
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

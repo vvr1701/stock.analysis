@@ -67,65 +67,136 @@ async function fetchStockData(ticker: string): Promise<Omit<StockData, 'id' | 'l
   }
 }
 
-// AI Advice Engine
+// Enhanced AI Advice Engine with Real Market Data Analysis
 function generateAdvice(portfolio: any[], stockData: any[]): AdviceItem[] {
   const advice: AdviceItem[] = [];
   let totalValue = 0;
   const sectorDistribution: { [key: string]: number } = {};
+  const performanceMetrics: { [key: string]: any } = {};
 
-  // Calculate portfolio metrics
+  // Calculate comprehensive portfolio metrics
   portfolio.forEach((stock, index) => {
     const data = stockData[index];
     if (data) {
       const value = stock.quantity * data.currentPrice;
       totalValue += value;
+      const weightage = value / totalValue;
       
-      const sector = data.sector || "Unknown";
+      const sector = data.sector || "Technology";
       sectorDistribution[sector] = (sectorDistribution[sector] || 0) + value;
+      
+      // Store performance metrics for advanced analysis
+      performanceMetrics[stock.ticker] = {
+        dailyChange: data.dailyChangePercent,
+        currentPrice: data.currentPrice,
+        movingAverage50: data.movingAverage50,
+        value: value,
+        weightage: weightage,
+        sector: sector,
+        name: data.name
+      };
+    }
+  });
 
-      // Individual stock advice
-      if (data.dailyChangePercent > 5) {
+  // Advanced individual stock analysis
+  portfolio.forEach((stock, index) => {
+    const data = stockData[index];
+    const metrics = performanceMetrics[stock.ticker];
+    
+    if (data && metrics) {
+      // Price vs Moving Average Analysis
+      const priceVsMA = metrics.movingAverage50 ? 
+        ((metrics.currentPrice - metrics.movingAverage50) / metrics.movingAverage50) * 100 : 0;
+
+      // Strong momentum (up significantly today + above MA)
+      if (data.dailyChangePercent > 3 && priceVsMA > 5) {
         advice.push({
           type: "SELL",
           ticker: stock.ticker,
-          message: `${stock.ticker} is up ${data.dailyChangePercent.toFixed(1)}% today. Consider taking profits if you're overweight.`,
-          confidence: "Med",
-          icon: "📉"
+          message: `${metrics.name || stock.ticker} shows strong momentum (+${data.dailyChangePercent.toFixed(1)}% today, ${priceVsMA.toFixed(1)}% above 50-day MA). Consider booking partial profits to lock in gains.`,
+          confidence: "High",
+          icon: "📈"
         });
-      } else if (data.dailyChangePercent < -3) {
+      }
+      // Value opportunity (down but fundamentally strong)
+      else if (data.dailyChangePercent < -2 && priceVsMA < -5 && metrics.weightage < 0.4) {
         advice.push({
           type: "BUY",
           ticker: stock.ticker,
-          message: `${stock.ticker} is down ${Math.abs(data.dailyChangePercent).toFixed(1)}% - potential buying opportunity if fundamentals are strong.`,
-          confidence: "Med",
-          icon: "📈"
+          message: `${metrics.name || stock.ticker} is undervalued (${Math.abs(priceVsMA).toFixed(1)}% below 50-day MA). Quality ${metrics.sector} stock trading at attractive levels - consider accumulating.`,
+          confidence: "High",
+          icon: "💎"
         });
-      } else if (Math.abs(data.dailyChangePercent) < 1) {
+      }
+      // Overweight position in volatile stock
+      else if (Math.abs(data.dailyChangePercent) > 2 && metrics.weightage > 0.4) {
+        advice.push({
+          type: "SELL",
+          ticker: stock.ticker,
+          message: `${metrics.name || stock.ticker} makes up ${(metrics.weightage * 100).toFixed(1)}% of your portfolio and shows high volatility. Consider reducing position to manage risk.`,
+          confidence: "Med",
+          icon: "⚖️"
+        });
+      }
+      // Stable performer - hold
+      else if (Math.abs(data.dailyChangePercent) < 2 && Math.abs(priceVsMA) < 3) {
         advice.push({
           type: "HOLD",
           ticker: stock.ticker,
-          message: `${stock.ticker} shows stable performance. Maintain current position and monitor quarterly results.`,
-          confidence: "Low",
+          message: `${metrics.name || stock.ticker} trades near fair value with stable performance. Good core holding - maintain current position and monitor quarterly results.`,
+          confidence: "Med",
           icon: "🤝"
         });
       }
     }
   });
 
-  // Diversification advice
+  // Sector diversification analysis
   const dominantSector = Object.entries(sectorDistribution)
     .sort(([,a], [,b]) => b - a)[0];
   
-  if (dominantSector && dominantSector[1] / totalValue > 0.6) {
+  const sectorConcentration = dominantSector ? (dominantSector[1] / totalValue) : 0;
+  
+  if (sectorConcentration > 0.65) {
     advice.push({
       type: "DIVERSIFY",
-      message: `Your portfolio is ${((dominantSector[1] / totalValue) * 100).toFixed(0)}% ${dominantSector[0]}. Consider diversifying into other sectors for better risk management.`,
+      message: `Portfolio is heavily concentrated (${(sectorConcentration * 100).toFixed(0)}%) in ${dominantSector[0]} sector. Consider adding Banking, FMCG, or Healthcare stocks for better diversification.`,
       confidence: "High",
       icon: "🔄"
     });
+  } else if (sectorConcentration > 0.45) {
+    advice.push({
+      type: "DIVERSIFY", 
+      message: `Good sector mix, but ${dominantSector[0]} dominates at ${(sectorConcentration * 100).toFixed(0)}%. Consider adding small positions in defensive sectors like Pharmaceuticals or Utilities.`,
+      confidence: "Med",
+      icon: "📊"
+    });
   }
 
-  return advice.slice(0, 4); // Return top 4 pieces of advice
+  // Portfolio size analysis
+  if (totalValue < 50000) {
+    advice.push({
+      type: "BUY",
+      message: `Small portfolio size (₹${totalValue.toLocaleString('en-IN')}). Focus on 2-3 quality large-cap stocks and consider SIP investment to build substantial wealth over time.`,
+      confidence: "High",
+      icon: "📈"
+    });
+  } else if (totalValue > 500000 && portfolio.length < 5) {
+    advice.push({
+      type: "DIVERSIFY",
+      message: `Substantial portfolio (₹${(totalValue/100000).toFixed(1)}L) with only ${portfolio.length} stocks. Consider adding 2-3 more quality stocks across different sectors.`,
+      confidence: "Med", 
+      icon: "🚀"
+    });
+  }
+
+  // Return prioritized advice (high confidence first, then limit to top 5)
+  return advice
+    .sort((a, b) => {
+      const confidenceOrder = { "High": 3, "Med": 2, "Low": 1 };
+      return confidenceOrder[b.confidence] - confidenceOrder[a.confidence];
+    })
+    .slice(0, 5);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
