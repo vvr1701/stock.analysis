@@ -1,0 +1,127 @@
+2. Live Stock Data (NO mock data)
+
+Fetch real stock data from a free API:
+
+Preferred: yfinance (no key needed).
+
+Alternative: Finnhub / Alpha Vantage / Twelve Data (use free tier, I’ll provide API key).
+
+For each stock fetch:
+
+Current price
+
+Daily % change
+
+50-day moving average
+
+Sector/basic fundamentals if available
+
+Provide intraday data for charts.
+
+3. Advice Engine
+
+Generate simple plain-English advice for beginners:
+
+📈 Buy → undervalued or trending upward
+
+📉 Sell → overvalued or trending downward
+
+🤝 Hold → stable trend
+
+🔄 Diversify → if portfolio is too concentrated
+
+Advice must be short and clear, e.g.:
+
+“TCS looks overvalued, consider reducing.”
+
+“Portfolio lacks banking stocks — add HDFC Bank.”
+
+4. Usage Tracking (Flexprice Requirement)
+
+Track number of portfolios analyzed and queries per day.
+
+Show usage stats in UI:
+
+Example: “2 portfolios analyzed today → 2 credits used.”
+
+Each portfolio analysis = 1 billed unit.
+
+Backend should simulate sending usage data to Flexprice API.
+
+5. Frontend UI
+
+Must look professional, elegant, hackathon-ready.
+
+Features:
+
+Portfolio input table/form.
+
+Advice cards with icons (📈, 📉, 🤝, 🔄).
+
+Charts:
+
+Portfolio distribution (pie chart)
+
+Live stock price trend (line chart)
+
+Usage stats card.
+
+UI Requirements:
+
+Modern UI framework (Tailwind, Material UI, Chakra, etc.).
+
+Dark/light mode toggle.
+
+Smooth animations (Framer Motion or equivalent).
+
+Clean layout, gradients, soft shadows.
+
+6. Backend
+
+APIs:
+
+/analyze_portfolio → input portfolio JSON, returns advice + usage stats + stock data.
+
+/usage → returns usage counters.
+
+/health → simple { "status": "ok" }.
+
+Store usage in a simple DB (SQLite or JSON).
+
+7. Pathway Integration (Freshness Requirement)
+
+Simulate live updates using Pathway-like setup.
+
+Either poll API or stream mock CSV → update advice when new data arrives.
+
+Example: “Prices updated — new advice generated.”
+
+Deliverables
+
+Fully functional end-to-end stock consultant app.
+
+Backend: fetches live stock data + usage tracking.
+
+Frontend: modern dashboard with charts + advice cards + usage stats.
+
+Integrations: Flexprice-style billing, Pathway-style live updates.
+
+Demo-ready: polished, professional, simple to understand.
+
+Bonus (Optional)
+
+User login with saved portfolios.
+
+Export report (PDF).
+
+Simulated billing screen with credits → ₹ value.
+
+⚡ Key Rule: Do not use mock data — only fetch live market prices from free APIs.
+
+
+---
+
+This single prompt ensures the coding agent builds:  
+✅ Professional UI (charts, dark mode, advice cards)  
+✅ Real-time stock data (no mock values)  
+✅ Advice system for beginners  
